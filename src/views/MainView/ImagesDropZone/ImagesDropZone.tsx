@@ -1,16 +1,15 @@
-import React, {PropsWithChildren} from 'react';
+import React, { useState, useEffect } from 'react';
 import './ImagesDropZone.scss';
-import {useDropzone,DropzoneOptions} from 'react-dropzone';
-import {TextButton} from '../../Common/TextButton/TextButton';
-import {ImageData} from '../../../store/labels/types';
-import {connect} from 'react-redux';
-import {addImageData, updateActiveImageIndex} from '../../../store/labels/actionCreators';
-import {AppState} from '../../../store';
-import {ProjectType} from '../../../data/enums/ProjectType';
-import {PopupWindowType} from '../../../data/enums/PopupWindowType';
-import {updateActivePopupType, updateProjectData} from '../../../store/general/actionCreators';
-import {ProjectData} from '../../../store/general/types';
-import {ImageDataUtil} from '../../../utils/ImageDataUtil';
+import { TextButton } from '../../Common/TextButton/TextButton';
+import { ImageData } from '../../../store/labels/types';
+import { connect } from 'react-redux';
+import { addImageData, updateActiveImageIndex } from '../../../store/labels/actionCreators';
+import { AppState } from '../../../store';
+import { ProjectType } from '../../../data/enums/ProjectType';
+import { PopupWindowType } from '../../../data/enums/PopupWindowType';
+import { updateActivePopupType, updateProjectData } from '../../../store/general/actionCreators';
+import { ProjectData } from '../../../store/general/types';
+import { ImageDataUtil } from '../../../utils/ImageDataUtil';
 import { sortBy } from 'lodash';
 
 interface IProps {
@@ -21,98 +20,110 @@ interface IProps {
     projectData: ProjectData;
 }
 
-const ImagesDropZone: React.FC<IProps> = (props: PropsWithChildren<IProps>) => {
-    const {acceptedFiles, getRootProps, getInputProps} = useDropzone({
-        accept: {
-            'image/*': ['.jpeg', '.png']
+const ImagesDropZone: React.FC<IProps> = (props: IProps) => {
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+    // Fetch image file locations from the server
+    useEffect(() => {
+        fetch('serverurl/get-images')  // Replace with the correct server API that returns image file paths
+            .then(response => response.json())
+            .then(data => {
+                loadImageFiles(data);
+            })
+            .catch(error => {
+                console.error('Error fetching images:', error);
+            });
+    }, []);
+
+    // Load image files from URLs and convert them into File objects
+    const loadImageFiles = async (imagePaths: string[]) => {
+        const files: File[] = [];
+        for (const imagePath of imagePaths) {
+            try {
+                const response = await fetch(`${imagePath}`);  // Assuming `/images/{imagePath}` is the URL to fetch the image
+                const blob = await response.blob();
+                const file = new File([blob], imagePath, { type: blob.type });
+                files.push(file);
+            } catch (error) {
+                console.error(`Failed to load image ${imagePath}:`, error);
+            }
         }
-    } as DropzoneOptions);
+        setImageFiles(files);
+    };
 
     const startEditor = (projectType: ProjectType) => {
-        if (acceptedFiles.length > 0) {
-            const files = sortBy(acceptedFiles, (item: File) => item.name)
+        if (imageFiles.length > 0) {
+            const sortedFiles = sortBy(imageFiles, (item: File) => item.name);
             props.updateProjectDataAction({
                 ...props.projectData,
                 type: projectType
             });
             props.updateActiveImageIndexAction(0);
-            props.addImageDataAction(files.map((file:File) => ImageDataUtil
-                .createImageDataFromFileData(file)));
+            props.addImageDataAction(sortedFiles.map((file: File) => ImageDataUtil.createImageDataFromFileData(file)));
             props.updateActivePopupTypeAction(PopupWindowType.INSERT_LABEL_NAMES);
         }
     };
 
+    const startEditorWithObjectDetection = () => startEditor(ProjectType.OBJECT_DETECTION);
+    const startEditorWithImageRecognition = () => startEditor(ProjectType.IMAGE_RECOGNITION);
+
     const getDropZoneContent = () => {
-        if (acceptedFiles.length === 0)
-            return <>
-                <input {...getInputProps()} />
-                <img
-                    draggable={false}
-                    alt={'upload'}
-                    src={'ico/box-opened.png'}
-                />
-                <p className='extraBold'>Drop images</p>
-                <p>or</p>
-                <p className='extraBold'>Click here to select them</p>
-            </>;
-        else if (acceptedFiles.length === 1)
-            return <>
-                <img
-                    draggable={false}
-                    alt={'uploaded'}
-                    src={'ico/box-closed.png'}
-                />
-                <p className='extraBold'>1 image loaded</p>
-            </>;
+        if (imageFiles.length === 0)
+            return (
+                <>
+                    <img draggable={false} alt="upload" src="ico/box-opened.png" />
+                    <p className="extraBold">Loading images</p>
+                    <p>or</p>
+                    <p className="extraBold">Click here to select them</p>
+                </>
+            );
+        else if (imageFiles.length === 1)
+            return (
+                <>
+                    <img draggable={false} alt="uploaded" src="ico/box-closed.png" />
+                    <p className="extraBold">1 image loaded</p>
+                </>
+            );
         else
-            return <>
-                <input {...getInputProps()} />
-                <img
-                    draggable={false}
-                    key={1}
-                    alt={'uploaded'}
-                    src={'ico/box-closed.png'}
-                />
-                <p key={2} className='extraBold'>{acceptedFiles.length} images loaded</p>
-            </>;
+            return (
+                <>
+                    <img draggable={false} key={1} alt="uploaded" src="ico/box-closed.png" />
+                    <p key={2} className="extraBold">{imageFiles.length} images loaded</p>
+                </>
+            );
     };
 
-    const startEditorWithObjectDetection = () => startEditor(ProjectType.OBJECT_DETECTION)
-    const startEditorWithImageRecognition = () => startEditor(ProjectType.IMAGE_RECOGNITION)
-
-    return(
-        <div className='ImagesDropZone'>
-            <div {...getRootProps({className: 'DropZone'})}>
+    return (
+        <div className="ImagesDropZone">
+            <div className="DropZone">
                 {getDropZoneContent()}
             </div>
-            <div className='DropZoneButtons'>
+
+            <div className="DropZoneButtons">
                 <TextButton
-                    label={'Object Detection'}
-                    isDisabled={!acceptedFiles.length}
+                    label="Object Detection"
+                    isDisabled={imageFiles.length === 0}
                     onClick={startEditorWithObjectDetection}
                 />
                 <TextButton
-                    label={'Image recognition'}
-                    isDisabled={!acceptedFiles.length}
+                    label="Image Recognition"
+                    isDisabled={imageFiles.length === 0}
                     onClick={startEditorWithImageRecognition}
                 />
             </div>
         </div>
-    )
+    );
 };
 
 const mapDispatchToProps = {
     updateActiveImageIndexAction: updateActiveImageIndex,
     addImageDataAction: addImageData,
     updateProjectDataAction: updateProjectData,
-    updateActivePopupTypeAction: updateActivePopupType
+    updateActivePopupTypeAction: updateActivePopupType,
 };
 
 const mapStateToProps = (state: AppState) => ({
-    projectData: state.general.projectData
+    projectData: state.general.projectData,
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ImagesDropZone);
+export default connect(mapStateToProps, mapDispatchToProps)(ImagesDropZone);
