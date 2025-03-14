@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ImportLabelPopup.scss';
 import { LabelType } from '../../../data/enums/LabelType';
 import { PopupActions } from '../../../logic/actions/PopupActions';
@@ -106,6 +106,59 @@ const ImportLabelPopup: React.FC<IProps> = (
     const onAnnotationFormatChange = (format: AnnotationFormatType) => {
         setFormatType(format);
     };
+    
+// ---
+    const [LabelPaths, setLabelPaths] = useState({});
+    const [labelVersions, setLabelVersions] = useState({});
+    // Fetch image file locations from the server
+    useEffect(() => {
+        fetch('https://serverurl/get-labels')  // Replace with the correct server API that returns image file paths
+            .then(response => response.json())
+            .then(data => {
+                // loadLabelFiles(data);
+                console.log("data", data);
+                setLabelPaths(data);
+                setLabelVersions(Object.keys(data).reduce((acc, key) => {
+                    acc[key] = false;
+                    return acc;
+                  }, {}));
+            })
+            .catch(error => {
+                console.error('Error fetching labels:', error);
+            });
+    }, []);
+
+    // Load image files from URLs and convert them into File objects
+    const loadLabelFiles = async (labelPaths: string[]) => {
+        const files: File[] = [];
+        for (const labelPath of labelPaths) {
+            try {
+                const response = await fetch(`${labelPath}`);  // Assuming `/images/{imagePath}` is the URL to fetch the image
+                const blob = await response.blob();
+                const file = new File([blob], labelPath, { type: blob.type });
+                files.push(file);
+            } catch (error) {
+                console.error(`Failed to load image ${labelPath}:`, error);
+            }
+        }
+        setLabelFiles(files);
+    };
+    const handleChange = (e, version) => {
+        toggleItemCompletion(version);
+        if ( labelVersions[version] ){
+            
+            const paths = LabelPaths[version]
+            
+            
+        }
+      };
+    const toggleItemCompletion = (version) => {
+        setLabelVersions((prevCheckedItems) => ({
+            ...prevCheckedItems,
+            [version]: !prevCheckedItems[version], // Toggle the checked value
+          }));
+    };
+// ---
 
     const getDropZoneContent = () => {
         if (annotationsLoadedError) {
@@ -139,9 +192,15 @@ const ImportLabelPopup: React.FC<IProps> = (
                     alt={'upload'}
                     src={'ico/box-opened.png'}
                 />
-                <p className='extraBold'>{`Drop ${formatType} annotations`}</p>
-                <p>or</p>
-                <p className='extraBold'>Click here to select them</p>
+                {/* Checkbox list */}
+                <div className='Options'>
+                    {Object.keys(labelVersions).map((version)=>{
+                        return <div className='OptionsItem'>
+                        <input type="checkbox" checked={labelVersions[version]} onChange={(e) => handleChange(e, version)}/>
+                           {version}
+                    </div>
+                    })}
+                </div>
             </>;
         }
     };
@@ -183,7 +242,7 @@ const ImportLabelPopup: React.FC<IProps> = (
         const importFormatData = ImportFormatData[type];
         return importFormatData.length === 0 ?
             <FeatureInProgress /> :
-            <div {...getRootProps({ className: 'DropZone' })}>
+            <div className="DropZone">
                 {getDropZoneContent()}
             </div>;
     };
@@ -196,7 +255,7 @@ const ImportLabelPopup: React.FC<IProps> = (
             acceptLabel={'Import'}
             onAccept={onAccept}
             skipAcceptButton={ImportFormatData[labelType].length === 0}
-            disableAcceptButton={loadedImageData.length === 0 || loadedLabelNames.length === 0 || !!annotationsLoadedError}
+            disableAcceptButton= {Object.values(labelVersions).filter(value => value === true).length == 0} //{labelVersions.length === 0 || loadedLabelNames.length === 0 || !!annotationsLoadedError}
             rejectLabel={'Cancel'}
             onReject={onReject}
             renderInternalContent={renderInternalContent}

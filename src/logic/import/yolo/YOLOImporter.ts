@@ -26,8 +26,10 @@ export class YOLOImporter extends AnnotationImporter {
             const sourceImagesData = LabelsSelector.getImagesData()
                 .map((i: ImageData) => ImageDataUtil.cleanAnnotations(i));
             const {labelNameFile, annotationFiles} = YOLOImporter.filterFilesData(filesData, sourceImagesData);
+
             const [relevantImageData, relevantAnnotations] = YOLOImporter
                 .matchImagesWithAnnotations(sourceImagesData, annotationFiles);
+
             const labelNamesPromise: Promise<LabelName[]> = FileUtil.readFile(labelNameFile)
                 .then((fileContent: string) => YOLOUtils.parseLabelsNamesFromString(fileContent));
             const missingImagesPromise: Promise<void> = ImageDataUtil.loadMissingImages(relevantImageData);
@@ -55,12 +57,17 @@ export class YOLOImporter extends AnnotationImporter {
             throw new NoLabelNamesFileProvidedError()
         }
         const imageIdentifiers: string[] = imagesData
-            .map((i: ImageData) => i.fileData.name)
-            .map((i: string) => FileUtil.extractFileName(i))
+        .map((i: ImageData) => i.fileData.name)
+        .map((filePath: string) => {
+            // Extract the portion after the last '/'
+            return filePath.substring(filePath.lastIndexOf('/') + 1);
+        })
+        .map((i: string) => FileUtil.extractFileName(i))
         const matchingPartitionResult = ArrayUtil.partition(
             filesData,
             (i: File) => imageIdentifiers.includes(FileUtil.extractFileName(i.name))
         )
+
         return {
             labelNameFile: functionalityPartitionResult.pass[0],
             annotationFiles: matchingPartitionResult.pass
@@ -69,7 +76,7 @@ export class YOLOImporter extends AnnotationImporter {
 
     public static matchImagesWithAnnotations(images: ImageData[], annotations: File[]): [ImageData[], File[]] {
         const predicate = (image: ImageData, annotation:  File) => {
-            return FileUtil.extractFileName(image.fileData.name) === FileUtil.extractFileName(annotation.name)
+            return FileUtil.extractFileName(image.fileData.name.substring(image.fileData.name.lastIndexOf('/') + 1)) === FileUtil.extractFileName(annotation.name)
         }
         return ArrayUtil.unzip(
             ArrayUtil.match<ImageData, File>(images, annotations, predicate)

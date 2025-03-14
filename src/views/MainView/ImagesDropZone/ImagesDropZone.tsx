@@ -22,10 +22,9 @@ interface IProps {
 
 const ImagesDropZone: React.FC<IProps> = (props: IProps) => {
     const [imageFiles, setImageFiles] = useState<File[]>([]);
-
     // Fetch image file locations from the server
     useEffect(() => {
-        fetch('serverurl/get-images')  // Replace with the correct server API that returns image file paths
+        fetch('https://serverurl/get-images')  // Replace with the correct server API that returns image file paths
             .then(response => response.json())
             .then(data => {
                 loadImageFiles(data);
