@@ -165,7 +165,14 @@ const ImportLabelPopup: React.FC<IProps> = (
       
         return concatenatedFile;
     }
-      
+    
+    const extractLeadingNumber = function (content: string): number {
+        const lines = content.split('\n');
+        const lastLine = lines[lines.length - 2]; // Last non-empty line (skip empty at end)
+        const leadingNumber = parseInt(lastLine.trim().split(' ')[0], 10); // Get the first number
+        return leadingNumber;
+    }
+    
 
     const handleChange = async (e, version) => {  
         toggleItemCompletion(version);
@@ -210,13 +217,21 @@ const ImportLabelPopup: React.FC<IProps> = (
     
                             try {
                                 // Read both file contents asynchronously
-                                const [existingContent, newContent] = await Promise.all([
+                                let [existingContent, newContent] = await Promise.all([
                                     existingFile.text(),  // Read existing file content
                                     newFile.text()         // Read new file content
                                 ]);
-    
+                                if (newFile.name != 'labels.txt') {
+                                    const leadingNumber = extractLeadingNumber(existingContent)
+                                    console.log(leadingNumber)
+                                    if (true) {
+                                        newContent = newContent.split('\n').map(line =>{
+                                            return line.replace(/^0\s/, `${leadingNumber+1} `)
+                                        }).join('\n')
+                                    }
+                                }
                                 const concatenatedContent = existingContent + '\n' + newContent;
-    
+                                console.log(concatenatedContent)
                                 // Create a new file with the concatenated content
                                 const concatenatedFile = new File([concatenatedContent], newFile.name, {
                                     type: newFile.type,
@@ -286,8 +301,8 @@ const ImportLabelPopup: React.FC<IProps> = (
                 {/* Checkbox list */}
                 <div className='Options'>
                     {Object.keys(labelVersions).map((version)=>{
-                        return <div className='OptionsItem'>
-                        <input key={version} type="checkbox" checked={labelVersions[version]} onChange={(e) => handleChange(e, version)}/>
+                        return <div className='OptionsItem'  key={version}>
+                        <input type="checkbox" checked={labelVersions[version]} onChange={(e) => handleChange(e, version)}/>
                            {version}
                     </div>
                     })}
