@@ -24,7 +24,7 @@ const ImagesDropZone: React.FC<IProps> = (props: IProps) => {
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     // Fetch image file locations from the server
     useEffect(() => {
-        fetch('https://serverurl/get-images')  // Replace with the correct server API that returns image file paths
+        fetch('serverurl/get-images')  // Replace with the correct server API that returns image file paths
             .then(response => response.json())
             .then(data => {
                 loadImageFiles(data);
@@ -39,6 +39,7 @@ const ImagesDropZone: React.FC<IProps> = (props: IProps) => {
         const files: File[] = [];
         for (const imagePath of imagePaths) {
             try {
+                console.log(imageFiles)
                 const response = await fetch(`${imagePath}`);  // Assuming `/images/{imagePath}` is the URL to fetch the image
                 const blob = await response.blob();
                 const file = new File([blob], imagePath, { type: blob.type });
@@ -47,7 +48,10 @@ const ImagesDropZone: React.FC<IProps> = (props: IProps) => {
                 console.error(`Failed to load image ${imagePath}:`, error);
             }
         }
-        setImageFiles(files);
+        setImageFiles(files.map(file => {
+            const fileName = file.name.split('/').pop();  // Get only the filename (without path)
+            return new File([file], fileName, { type: file.type });
+        }));
     };
 
     const startEditor = (projectType: ProjectType) => {
