@@ -172,10 +172,16 @@
     width: 0;
   }
 
-  > .TextButton {
+  > .TextButton.Concensus{
     position: absolute;
     right: 20px;
     bottom: 20px;
+  }
+
+  > .TextButton.Other{
+    position: absolute;
+    right: 20px;
+    bottom: 80px;
   }
 }
 

@@ -15,7 +15,7 @@ import ExportLabelPopup from './ExportLabelsPopup/ExportLabelPopup';
 import LoadModelPopup from './LoadModelPopup/LoadModelPopup';
 import LoadYOLOv5ModelPopup from './LoadYOLOv5ModelPopup/LoadYOLOv5ModelPopup';
 import ConnectInferenceServerPopup from './ConnectInferenceServerPopup/ConnectInferenceServerPopup';
-
+import MergeAnnotationVersionsPopup from './MergeAnnotationVersionsPopup/MergeAnnotationVersionsPopup';
 interface IProps {
     activePopupType: PopupWindowType;
 }
@@ -56,6 +56,8 @@ const PopupView: React.FC<IProps> = ({ activePopupType }) => {
                     color={CSSHelper.getLeadingColor()}
                     loading={true}
                 />;
+            case PopupWindowType.MERGE_ANNOTATION_VERSIONS:
+                return <MergeAnnotationVersionsPopup/>
             default:
                 return null;
         }

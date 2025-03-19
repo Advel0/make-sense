@@ -68,7 +68,7 @@ const ImportLabelPopup: React.FC<IProps> = (
         setLoadedImageData(imagesData);
         setAnnotationsLoadedError(null);
     };
-
+    
     const onAnnotationsLoadFailure = (error?: Error) => {
         setLoadedLabelNames([]);
         setLoadedImageData([]);
@@ -77,18 +77,7 @@ const ImportLabelPopup: React.FC<IProps> = (
         submitNewNotification(NotificationUtil.createErrorNotification(NotificationsDataMap[notification]));
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
-        accept: {
-            "application/json": [".json" ],
-            "text/plain": [".txt"],
-            "application/xml": [".xml"],
-        },
-        multiple: true,
-        onDrop: (acceptedFiles) => {
-            const importer = new (ImporterSpecData[formatType])([labelType]);
-            importer.import(acceptedFiles, onAnnotationLoadSuccess, onAnnotationsLoadFailure);
-        }
-    });
+
 
     const onAccept = (type: LabelType) => {
         if (loadedLabelNames.length !== 0 && loadedImageData.length !== 0) {
@@ -280,7 +269,7 @@ const ImportLabelPopup: React.FC<IProps> = (
     const getDropZoneContent = () => {
         if (annotationsLoadedError) {
             return <>
-                <input {...getInputProps()} />
+                
                 <img
                     draggable={false}
                     alt={'upload'}
@@ -292,7 +281,6 @@ const ImportLabelPopup: React.FC<IProps> = (
             </>;
         } else {
             return <>
-                <input {...getInputProps()} />
                 <img
                     draggable={false}
                     alt={'upload'}

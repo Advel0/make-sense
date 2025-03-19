@@ -101,7 +101,7 @@ export class RectLabelsExporter {
         return labelFields.join(Settings.CSV_SEPARATOR)
     }
 
-    private static wrapRectLabelsIntoYOLO(imageData: ImageData): string {
+    public static wrapRectLabelsIntoYOLO(imageData: ImageData): string {
         if (imageData.labelRects.length === 0 || !imageData.loadStatus)
             return null;
 

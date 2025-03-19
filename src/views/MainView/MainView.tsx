@@ -127,11 +127,17 @@ const MainView: React.FC = () => {
                 <div className='SocialMediaWrapper'>
                     {getSocialMediaButtons({ width: 30, height: 30 })}
                 </div>
+
                 {!projectInProgress && <TextButton
-                    label={'Get Started'}
-                    onClick={startProject}
-                    externalClassName={'get-started-button'}
+                    label={'Other mechanism'}
+                    externalClassName={'get-started-button Other'}
                 />}
+                {!projectInProgress && <TextButton
+                    label={'Concensus mechanism'}
+                    onClick={startProject}
+                    externalClassName={'get-started-button Concensus'}
+                />}
+
             </div>
         </div>
     );

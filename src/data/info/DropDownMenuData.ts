@@ -52,6 +52,14 @@ export const DropDownMenuData: DropDownMenuNode[] = [
                 onClick: () => store.dispatch(updateActivePopupType(PopupWindowType.EXPORT_ANNOTATIONS))
             },
             {
+                name: 'Merge Annotation versions',
+                description: 'Merge Annotation versions',
+                imageSrc: 'ico/export-labels.png',
+                imageAlt: 'export-labels',
+                disabled: false,
+                onClick: () => store.dispatch(updateActivePopupType(PopupWindowType.MERGE_ANNOTATION_VERSIONS))
+            },  
+            {
                 name: 'Run AI locally',
                 description: 'Run annotation model in browser',
                 imageSrc: 'ico/ai.png',
@@ -65,7 +73,7 @@ export const DropDownMenuData: DropDownMenuNode[] = [
                 imageSrc: 'ico/api.png',
                 imageAlt: 'connect-ai-server',
                 disabled: false,
-                onClick: () => store.dispatch(updateActivePopupType(PopupWindowType.CONNECT_AI_MODEL_VIA_API))
+                onClick: () => store.dispatch(updateActivePopupType(PopupWindowType.MERGE_ANNOTATION_VERSIONS))
             },
         ]
     },

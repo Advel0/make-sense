@@ -39,7 +39,8 @@ export class Settings {
         PopupWindowType.EXIT_PROJECT,
         PopupWindowType.UPDATE_LABEL,
         PopupWindowType.LOAD_AI_MODEL,
-        PopupWindowType.LOAD_YOLO_V5_MODEL
+        PopupWindowType.LOAD_YOLO_V5_MODEL,
+        PopupWindowType.MERGE_ANNOTATION_VERSIONS
     ];
 
     public static readonly LABEL_COLORS_PALETTE = [
